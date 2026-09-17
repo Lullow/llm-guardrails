@@ -1,0 +1,5 @@
+fastapi==0.141.1
+uvicorn==0.53.0
+transformers==5.17.0
+sentencepiece==0.2.2
+protobuf==7.36.1

@@ -1,0 +1,42 @@
+model_list:
+  - model_name: llama3.2-3b
+    litellm_params:
+      model: ollama_chat/llama3.2:3b
+      api_base: http://host.docker.internal:11434
+      timeout: 120  # LiteLLM avbryter anropet mot Ollama, annars fortsätter genereringen efter klientens timeout
+  - model_name: qwen3-8b
+    litellm_params:
+      model: ollama_chat/qwen3:8b
+      api_base: http://host.docker.internal:11434
+      timeout: 120  # LiteLLM avbryter anropet mot Ollama, annars fortsätter genereringen efter klientens timeout
+
+# Inga guardrails är default_on. Eval-skriptet väljer vilka som körs per anrop
+# via fältet "guardrails", så att samma proxy kan jämföra konfigurationerna.
+guardrails:
+  # Inbyggt i LiteLLM: nyckelordsmatchning (triggerord + blockord i samma mening).
+  - guardrail_name: keyword-filter
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: pre_call
+      categories:
+        - category: prompt_injection_jailbreak
+          action: BLOCK
+        - category: prompt_injection_system_prompt
+          action: BLOCK
+        - category: prompt_injection_data_exfiltration
+          action: BLOCK
+
+  # Egen: ML-klassificerare (deberta) på användar- och dokumentinnehåll.
+  - guardrail_name: injection-classifier
+    litellm_params:
+      guardrail: injection_guard.InjectionClassifierGuard
+      mode: pre_call
+
+  # Egen: stoppar svar som läcker hemligheter eller länkar till okända domäner.
+  - guardrail_name: output-leak-check
+    litellm_params:
+      guardrail: injection_guard.OutputLeakGuard
+      mode: post_call
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

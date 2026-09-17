@@ -1,0 +1,30 @@
+services:
+  litellm:
+    # Låst till en exakt digest. Taggar som main-stable flyttas, och litellm
+    # drabbades av en supply chain-attack i mars 2026 (PyPI 1.82.7/1.82.8).
+    image: ghcr.io/berriai/litellm:v1.101.0@sha256:d295634e09c648dcdb72c4cc2dd226f5fb87823a73e88cbbed6f205e4deb044b
+    command: ["--config", "/app/guardrails/config.yaml", "--port", "4000"]
+    ports:
+      - "127.0.0.1:4000:4000"
+    env_file: app.env
+    environment:
+      LITELLM_MASTER_KEY: sk-homework4-local
+    volumes:
+      # Hela mappen monteras. Enskilda filer tappar bindningen i Docker Desktop när en editor ersätter filen.
+      - ./litellm:/app/guardrails:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      detector:
+        condition: service_healthy
+
+  detector:
+    build: ./detector
+    image: homework4-detector
+    ports:
+      - "127.0.0.1:8001:8000"  # för eval/detector_scores.py
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
