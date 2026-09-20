@@ -266,4 +266,4 @@ The scripts use only the Python standard library. Remember `ollama stop <model>`
 
 ---
 
-*Built as assignment 4 in an LLM security course, September 2026. The code comments in this repository are written in Swedish.*
+*Built as a course assignment, September 2026. The code comments in this repository are written in Swedish.*
